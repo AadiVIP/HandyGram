@@ -1,40 +1,43 @@
-name: Build Flutter APK
+name: Build Flutter APK on macOS
 
 on:
   push:
     branches:
-      - main   # Triggers the workflow on pushes to the "main" branch
+      - main   # Trigger on pushes to the "main" branch
   pull_request:
     branches:
-      - main   # Triggers the workflow on pull requests to the "main" branch
+      - main   # Trigger on pull requests to the "main" branch
+
+env:
+  TELEGRAM_API_URL: https://api.telegram.org
 
 jobs:
   build-apk:
-    name: Build Flutter APK
-    runs-on: ubuntu-latest
+    name: Build Flutter APK on macOS
+    runs-on: macos-latest  # Run on macOS environment
 
     steps:
-    # 1. Checkout the repository
-    - name: Checkout repository
-      uses: actions/checkout@v3
+      # 1. Checkout the repository
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
-    # 2. Setup Flutter environment
-    - name: Set up Flutter
-      uses: subosito/flutter-action@v2
-      with:
-        flutter-version: 'stable' # You can specify a version like "3.10.0"
+      # 2. Set up Flutter
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 'stable'  # Specify the Flutter version
 
-    # 3. Install dependencies
-    - name: Install dependencies
-      run: flutter pub get
+      # 3. Install dependencies
+      - name: Install dependencies
+        run: flutter pub get
 
-    # 4. Build the APK
-    - name: Build APK
-      run: flutter build apk --release
+      # 4. Build the APK
+      - name: Build APK
+        run: flutter build apk --release
 
-    # 5. Upload the APK as an artifact
-    - name: Upload APK
-      uses: actions/upload-artifact@v3
-      with:
-        name: app-release-apk
-        path: build/app/outputs/apk/release/app-release.apk
+      # 5. Upload the APK as an artifact
+      - name: Upload APK
+        uses: actions/upload-artifact@v3
+        with:
+          name: app-release-apk
+          path: build/app/outputs/apk/release/app-release.apk
