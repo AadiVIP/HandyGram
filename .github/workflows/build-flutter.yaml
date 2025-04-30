@@ -3,7 +3,8 @@ name: Flutter APK Build and Release
 on:
   push:
     tags:
-      - 'v1.0.0' # Trigger on version tags (e.g., v1.0.0)
+      - 'v*' # Trigger on version tags (e.g., v1.0.0)
+  workflow_dispatch: # Allows manual triggering from GitHub UI
 
 jobs:
   build:
