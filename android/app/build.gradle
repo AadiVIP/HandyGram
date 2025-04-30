@@ -35,7 +35,7 @@ if (flutterVersionName == null) {
 
 android {
     namespace "ru.tdrk.handygram"
-    compileSdkVersion 34
+    compileSdkVersion 35
 
     compileOptions {
         coreLibraryDesugaringEnabled true
