@@ -1,39 +1,33 @@
-name: Build Flutter APK
+name: Flutter Build APK
 
 on:
   push:
     branches:
       - main
-  workflow_dispatch:
+  pull_request:
 
 jobs:
   build:
+    name: Build APK
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v3
+    - name: Checkout Repository
+      uses: actions/checkout@v3
 
-      - name: Set up Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          flutter-version: '3.19.5' # Adjust if needed
-          cache: true
+    - name: Set up Flutter
+      uses: subosito/flutter-action@v2
+      with:
+        flutter-version: '3.19.0'
 
-      - name: Set up Java 17
-        uses: actions/setup-java@v3
-        with:
-          distribution: 'temurin'
-          java-version: 17
+    - name: Install Dependencies
+      run: flutter pub get
 
-      - name: Install dependencies
-        run: flutter pub get
+    - name: Build APK
+      run: flutter build apk --release
 
-      - name: Update compileSdkVersion to 35
-        run: |
-          sed -i 's/compileSdkVersion [0-9]\+/compileSdkVersion 35/' android/app/build.gradle
-          sed -i 's/targetSdkVersion [0-9]\+/targetSdkVersion 35/' android/app/build.gradle
-
-      - name: Enable material icons (fixes font issue)
-        run: |
-          sed -i '/flutter:/,/^[^ ]/ s/^.*uses-material-design.*$/
+    - name: Upload Release APK
+      uses: actions/upload-artifact@v3
+      with:
+        name: release-apk
+        path: build/app/outputs/flutter-apk/app-release.apk
