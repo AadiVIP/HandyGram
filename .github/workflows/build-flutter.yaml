@@ -1,0 +1,75 @@
+name: Flutter APK Build and Release
+
+on:
+  push:
+    tags:
+      - 'v1.0.0' # Trigger on version tags (e.g., v1.0.0)
+
+jobs:
+  build:
+    name: Build APK
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up JDK
+        uses: actions/setup-java@v2
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Set up Flutter
+        uses: flutter-actions/setup-flutter@v2
+        with:
+          version: '3.19.5'
+          channel: 'stable'
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Run Flutter doctor
+        run: flutter doctor -v
+
+      - name: Build APK
+        run: flutter build apk --release
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v3  # Updated to v3
+        with:
+          name: release-apk
+          path: build/app/outputs/flutter-apk/app-release.apk
+          retention-days: 1
+
+  release:
+    name: Create Release
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download APK artifact
+        uses: actions/download-artifact@v3  # Updated to v3
+        with:
+          name: release-apk
+          path: ./  # Explicitly specify download path
+
+      - name: List downloaded files
+        run: ls -la  # Debug step to see what files were downloaded
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref_name }}
+          body: |
+            Flutter APK Release
+            - Version: ${{ github.ref_name }}
+            - Commit: ${{ github.sha }}
+            - Built on: ${{ github.event.repository.updated_at }}
+          files: app-release.apk  # The file should be in the root directory now
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
