@@ -3,7 +3,7 @@ name: Flutter APK Build and Release
 on:
   push:
     tags:
-      - 'v*' # Trigger on version tags (e.g., v1.0.0)
+      - 'v1.0.0' # Trigger on version tags (e.g., v1.0.0)
 
 jobs:
   build:
@@ -12,18 +12,18 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3 # Compatible with your runner version
+        uses: actions/checkout@v3
 
       - name: Set up JDK
-        uses: actions/setup-java@v2 # Downgraded to v2 for compatibility
+        uses: actions/setup-java@v2
         with:
           java-version: '17'
           distribution: 'temurin'
 
       - name: Set up Flutter
-        uses: subosito/flutter-action@v1 # Using v1 instead of v2 for compatibility
+        uses: subosito/flutter-action@v1
         with:
-          flutter-version: '3.19.5' # Specify your Flutter version
+          flutter-version: '3.19.5'
           channel: 'stable'
 
       - name: Install dependencies
@@ -36,7 +36,7 @@ jobs:
         run: flutter build apk --release
 
       - name: Upload APK artifact
-        uses: actions/upload-artifact@v2 # Using v2 instead of v3
+        uses: actions/upload-artifact@v3  # Updated to v3
         with:
           name: release-apk
           path: build/app/outputs/flutter-apk/app-release.apk
@@ -49,14 +49,13 @@ jobs:
 
     steps:
       - name: Download APK artifact
-        uses: actions/download-artifact@v2 # Using v2 instead of v3
+        uses: actions/download-artifact@v3  # Updated to v3
         with:
           name: release-apk
+          path: ./  # Explicitly specify download path
 
-      - name: Rename APK (optional)
-        run: |
-          mv build/app/outputs/flutter-apk/app-release.apk app-release.apk ||
-          mv app-release.apk app-release.apk # Fallback if path differs
+      - name: List downloaded files
+        run: ls -la  # Debug step to see what files were downloaded
 
       - name: Create Release
         uses: softprops/action-gh-release@v1
@@ -67,8 +66,8 @@ jobs:
             Flutter APK Release
             - Version: ${{ github.ref_name }}
             - Commit: ${{ github.sha }}
-            - Built on: ${{ github.event.head_commit.timestamp }}
-          files: app-release.apk
+            - Built on: ${{ github.event.repository.updated_at }}
+          files: app-release.apk  # The file should be in the root directory now
           draft: false
           prerelease: false
         env:
