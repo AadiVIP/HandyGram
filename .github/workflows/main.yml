@@ -3,7 +3,7 @@ name: Flutter APK Build and Release
 on:
   push:
     tags:
-      - 'v1.0.0' # Trigger on version tags (e.g., v1.0.0)
+      - 'v*' # Trigger on version tags (e.g., v1.0.0)
 
 jobs:
   build:
@@ -12,16 +12,16 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v3 # Compatible with your runner version
 
       - name: Set up JDK
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v2 # Downgraded to v2 for compatibility
         with:
           java-version: '17'
           distribution: 'temurin'
 
       - name: Set up Flutter
-        uses: subosito/flutter-action@v2
+        uses: subosito/flutter-action@v1 # Using v1 instead of v2 for compatibility
         with:
           flutter-version: '3.19.5' # Specify your Flutter version
           channel: 'stable'
@@ -36,11 +36,11 @@ jobs:
         run: flutter build apk --release
 
       - name: Upload APK artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v2 # Using v2 instead of v3
         with:
           name: release-apk
           path: build/app/outputs/flutter-apk/app-release.apk
-          retention-days: 1 # Only store artifact for 1 day since we'll release it
+          retention-days: 1
 
   release:
     name: Create Release
@@ -49,10 +49,9 @@ jobs:
 
     steps:
       - name: Download APK artifact
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v2 # Using v2 instead of v3
         with:
           name: release-apk
-          path: . # Download to root directory
 
       - name: Rename APK (optional)
         run: |
