@@ -1,43 +1,39 @@
-name: Build Flutter APK on macOS
+name: Build Flutter APK
 
 on:
   push:
     branches:
-      - main   # Trigger on pushes to the "main" branch
-  pull_request:
-    branches:
-      - main   # Trigger on pull requests to the "main" branch
-
-env:
-  TELEGRAM_API_URL: https://api.telegram.org
+      - main
+  workflow_dispatch:
 
 jobs:
-  build-apk:
-    name: Build Flutter APK on macOS
-    runs-on: macos-latest  # Run on macOS environment
+  build:
+    runs-on: ubuntu-latest
 
     steps:
-      # 1. Checkout the repository
-      - name: Checkout repository
+      - name: Checkout Repository
         uses: actions/checkout@v3
 
-      # 2. Set up Flutter
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: 'stable'  # Specify the Flutter version
+          flutter-version: '3.19.5' # Adjust if needed
+          cache: true
 
-      # 3. Install dependencies
+      - name: Set up Java 17
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: 17
+
       - name: Install dependencies
         run: flutter pub get
 
-      # 4. Build the APK
-      - name: Build APK
-        run: flutter build apk --release
+      - name: Update compileSdkVersion to 35
+        run: |
+          sed -i 's/compileSdkVersion [0-9]\+/compileSdkVersion 35/' android/app/build.gradle
+          sed -i 's/targetSdkVersion [0-9]\+/targetSdkVersion 35/' android/app/build.gradle
 
-      # 5. Upload the APK as an artifact
-      - name: Upload APK
-        uses: actions/upload-artifact@v3
-        with:
-          name: app-release-apk
-          path: build/app/outputs/apk/release/app-release.apk
+      - name: Enable material icons (fixes font issue)
+        run: |
+          sed -i '/flutter:/,/^[^ ]/ s/^.*uses-material-design.*$/
