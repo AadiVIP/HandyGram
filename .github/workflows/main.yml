@@ -40,6 +40,7 @@ jobs:
         with:
           name: release-apk
           path: build/app/outputs/flutter-apk/app-release.apk
+          retention-days: 1 # Only store artifact for 1 day since we'll release it
 
   release:
     name: Create Release
@@ -51,16 +52,25 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: release-apk
+          path: . # Download to root directory
+
+      - name: Rename APK (optional)
+        run: |
+          mv build/app/outputs/flutter-apk/app-release.apk app-release.apk ||
+          mv app-release.apk app-release.apk # Fallback if path differs
 
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
           tag_name: ${{ github.ref }}
-          name: Release ${{ github.ref_name }}
+          release_name: Release ${{ github.ref_name }}
           body: |
             Flutter APK Release
             - Version: ${{ github.ref_name }}
             - Commit: ${{ github.sha }}
+            - Built on: ${{ github.event.head_commit.timestamp }}
           files: app-release.apk
+          draft: false
+          prerelease: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
