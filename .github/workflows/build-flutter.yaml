@@ -3,8 +3,8 @@ name: Flutter APK Build and Release
 on:
   push:
     tags:
-      - 'v*' # Trigger on version tags (e.g., v1.0.0)
-  workflow_dispatch: # Allows manual triggering from GitHub UI
+      - 'v*'
+  workflow_dispatch:
 
 jobs:
   build:
@@ -24,71 +24,57 @@ jobs:
           distribution: 'temurin'
           cache: gradle
 
-      - name: Setup Flutter
+      - name: Install Flutter (exact version)
         uses: subosito/flutter-action@v2
         with:
           channel: 'stable'
-          # Use the EXACT version from Flutter's release archive
-          flutter-version: '3.19.5-stable'  # ← Note "-stable" suffix
-          cache: false  # Disable cache to force fresh install
+          flutter-version: '3.19.5-stable'  # Critical: "-stable" suffix
+          cache: false  # Fresh install to avoid conflicts
+
       - name: Verify Flutter Installation
-            run: |
-              echo "Expected Flutter: 3.19.5 (Dart 3.5.2)"
-              flutter --version
-              if ! flutter --version | grep -q "3.19.5"; then
-                echo "::error::Wrong Flutter version installed!"
-                exit 1
-              fi
-              if ! dart --version | grep -q "3.5.2"; then
-                echo "::error::Wrong Dart version installed!"
-                exit 1
-              fi
-      - name: Check Flutter environment
         run: |
+          echo "Expected: Flutter 3.19.5 • Dart 3.5.2"
           flutter --version
-          flutter doctor -v
-          echo "ANDROID_HOME: $ANDROID_HOME"
-          echo "JAVA_HOME: $JAVA_HOME"
+          if ! flutter --version | grep -q "3.19.5"; then
+            echo "::error::Wrong Flutter version installed!"
+            exit 1
+          fi
+          if ! dart --version | grep -q "3.5.2"; then
+            echo "::error::Wrong Dart version installed!"
+            exit 1
+          fi
+
+      - name: Accept Android licenses
+        run: |
+          yes | sdkmanager --licenses
+          flutter doctor --android-licenses
 
       - name: Install dependencies
         run: |
           flutter pub get
           flutter pub run build_runner build --delete-conflicting-outputs
 
-      - name: Check directory structure
-        run: |
-          pwd
-          ls -la
-          find . -name "pubspec.yaml" -type f
-          find . -name "build.gradle" -type f
+      - name: Build debug APK (sanity check)
+        run: flutter build apk --debug
 
-      - name: Build APK with detailed logging
+      - name: Build release APK
         run: |
           flutter build apk --release --verbose 2>&1 | tee build.log
-          # Save the build log as an artifact
           echo "BUILD_LOG=$(cat build.log | base64 -w 0)" >> $GITHUB_ENV
-        continue-on-error: true
 
       - name: Upload build log
-        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: build-log
           path: build.log
           retention-days: 3
 
-      - name: Check build output
-        run: |
-          ls -la build/app/outputs/flutter-apk/ || echo "APK output directory not found"
-          find build -name "*.apk" -type f || echo "No APK files found in build directory"
-
-      - name: Upload APK
+      - name: Upload APK artifact
         if: success()
         uses: actions/upload-artifact@v4
         with:
           name: app-release
           path: build/app/outputs/flutter-apk/app-release.apk
-          if-no-files-found: error
           retention-days: 3
 
   release:
@@ -102,17 +88,12 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: app-release
-          path: ./
-      
-      - name: List files
-        run: |
-          pwd
-          ls -la
+          path: ./release-apk
 
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
-          files: ./app-release.apk
+          files: ./release-apk/app-release.apk
           draft: false
           prerelease: false
         env:
