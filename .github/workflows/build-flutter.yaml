@@ -47,6 +47,19 @@ jobs:
       - name: Accept Android licenses
         run: |
           yes | flutter doctor --android-licenses
+      
+      - name: Generate keys.dart from secrets
+        run: |
+          mkdir -p lib/src/common/tdlib/client/configuration
+          cat <<EOF > lib/src/common/tdlib/client/configuration/keys.dart
+          class TelegramAPIKeys {
+            static const int apiId = ${API_ID};
+            static const String apiHash = '${API_HASH}';
+          }
+          EOF
+        env:
+          API_ID: ${{ secrets.API_ID }}
+          API_HASH: ${{ secrets.API_HASH }}
       - name: Install dependencies
         run: |
           flutter pub get
