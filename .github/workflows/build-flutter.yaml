@@ -28,8 +28,8 @@ jobs:
         uses: subosito/flutter-action@v2
         with:
           channel: 'stable'
+          flutter-version: '3.19.5'  # Pinned version with Dart 3.5.2
           cache: true
-          flutter-version: '3.19.5' # Specify a specific version for consistency
 
       - name: Check Flutter environment
         run: |
