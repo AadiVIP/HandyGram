@@ -27,7 +27,7 @@ jobs:
       - name: Setup Flutter
         uses: flutter-actions/setup-flutter@v2
         with:
-          version: '3.22.0'  # This version includes Dart SDK 3.5.x
+          version: '3.25.0'  # This version includes Dart SDK 3.5.5
           channel: 'stable'
 
       - name: Check Flutter version
