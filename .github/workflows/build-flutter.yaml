@@ -46,9 +46,7 @@ jobs:
 
       - name: Accept Android licenses
         run: |
-          yes | sdkmanager --licenses
-          flutter doctor --android-licenses
-
+          yes | flutter doctor --android-licenses
       - name: Install dependencies
         run: |
           flutter pub get
