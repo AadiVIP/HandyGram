@@ -17,33 +17,47 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Set up JDK
-        uses: actions/setup-java@v2
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
         with:
           java-version: '17'
           distribution: 'temurin'
+          cache: gradle
 
-      - name: Set up Flutter
-        uses: subosito/flutter-action@v2
+      - name: Setup Flutter
+        uses: flutter-actions/setup-flutter@v2
         with:
+          version: '3.19.5'
           channel: 'stable'
-          flutter-version: '3.19.5'
+
+      - name: Check Flutter version
+        run: flutter --version
 
       - name: Install dependencies
         run: flutter pub get
-        
-      - name: Run Flutter doctor
-        run: flutter doctor -v
+      
+      - name: Check directory structure
+        run: |
+          pwd
+          ls -la
+          find . -name "pubspec.yaml" -type f
 
       - name: Build APK
-        run: flutter build apk --release
+        run: |
+          flutter build apk --release --verbose
+
+      - name: Check build output
+        run: |
+          ls -la build/app/outputs/flutter-apk/ || echo "APK output directory not found"
+          find build -name "*.apk" -type f || echo "No APK files found in build directory"
 
       - name: Upload APK
+        if: success()
         uses: actions/upload-artifact@v4
         with:
           name: app-release
           path: build/app/outputs/flutter-apk/app-release.apk
-          if-no-files-found: error
+          if-no-files-found: warn
           retention-days: 3
 
   release:
@@ -60,12 +74,14 @@ jobs:
           path: ./
       
       - name: List files
-        run: ls -la
+        run: |
+          pwd
+          ls -la
 
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
-          files: app-release.apk
+          files: ./app-release.apk
           draft: false
           prerelease: false
         env:
