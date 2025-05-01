@@ -28,14 +28,14 @@ jobs:
         uses: subosito/flutter-action@v2
         with:
           channel: 'stable'
-          flutter-version: '3.19.5'  # Critical: "-stable" suffix
-          cache: false  # Fresh install to avoid conflicts
+          flutter-version: '3.22.0'  # updated from 3.19.5
+          cache: false
 
       - name: Verify Flutter Installation
         run: |
-          echo "Expected: Flutter 3.19.5 • Dart 3.5.2"
+          echo "Expected: Flutter 3.22.0 • Dart 3.5.2"
           flutter --version
-          if ! flutter --version | grep -q "3.19.5"; then
+          if ! flutter --version | grep -q "3.22.0"; then
             echo "::error::Wrong Flutter version installed!"
             exit 1
           fi
