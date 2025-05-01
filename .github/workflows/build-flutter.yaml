@@ -29,22 +29,41 @@ jobs:
         with:
           channel: 'stable'
           cache: true
+          flutter-version: '3.19.5' # Specify a specific version for consistency
 
-      - name: Check Flutter version
-        run: flutter --version
+      - name: Check Flutter environment
+        run: |
+          flutter --version
+          flutter doctor -v
+          echo "ANDROID_HOME: $ANDROID_HOME"
+          echo "JAVA_HOME: $JAVA_HOME"
 
       - name: Install dependencies
-        run: flutter pub get
-      
+        run: |
+          flutter pub get
+          flutter pub run build_runner build --delete-conflicting-outputs
+
       - name: Check directory structure
         run: |
           pwd
           ls -la
           find . -name "pubspec.yaml" -type f
+          find . -name "build.gradle" -type f
 
-      - name: Build APK
+      - name: Build APK with detailed logging
         run: |
-          flutter build apk --release --verbose
+          flutter build apk --release --verbose 2>&1 | tee build.log
+          # Save the build log as an artifact
+          echo "BUILD_LOG=$(cat build.log | base64 -w 0)" >> $GITHUB_ENV
+        continue-on-error: true
+
+      - name: Upload build log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-log
+          path: build.log
+          retention-days: 3
 
       - name: Check build output
         run: |
@@ -57,14 +76,14 @@ jobs:
         with:
           name: app-release
           path: build/app/outputs/flutter-apk/app-release.apk
-          if-no-files-found: warn
+          if-no-files-found: error
           retention-days: 3
 
   release:
     name: Create Release
     needs: build
     runs-on: ubuntu-latest
-    if: startsWith(github.ref, 'refs/tags/')
+    if: startsWith(github.ref, 'refs/tags/') && needs.build.result == 'success'
 
     steps:
       - name: Download APK
