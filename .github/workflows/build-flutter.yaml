@@ -28,7 +28,7 @@ jobs:
         uses: subosito/flutter-action@v2
         with:
           channel: 'stable'
-          flutter-version: '3.19.5-stable'  # Critical: "-stable" suffix
+          flutter-version: '3.19.5'  # Critical: "-stable" suffix
           cache: false  # Fresh install to avoid conflicts
 
       - name: Verify Flutter Installation
